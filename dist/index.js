@@ -95408,6 +95408,7 @@ var PathfinderConfigSchema = external_exports.object({
   }).optional()
 });
 var MonorepoPlanSchema = external_exports.object({
+  plan_version: external_exports.literal(1).optional(),
   affected_projects: external_exports.array(external_exports.string().min(1).max(128)).max(200).default([]),
   execution_plan: external_exports.array(
     external_exports.object({
@@ -95415,6 +95416,14 @@ var MonorepoPlanSchema = external_exports.object({
       jobs: external_exports.array(external_exports.string().min(1).max(80)).max(50)
     })
   ).max(200).optional()
+}).superRefine((value, ctx) => {
+  if (value.plan_version !== void 0 && value.plan_version !== 1) {
+    ctx.addIssue({
+      code: external_exports.ZodIssueCode.custom,
+      message: "Unsupported monorepo plan_version",
+      path: ["plan_version"]
+    });
+  }
 });
 var HistoryRunSchema = external_exports.object({
   head_branch: external_exports.string().min(1).max(256).optional(),
