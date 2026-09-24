@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.1
+
+### Added
+
+* `telemetry` input (default `false`) emits a structured JSON info log with `duration_ms`, `provider`, `provisional`, `run_count`, `cache_hit`, `decision`, and `decision_mode` — never paths or secrets.
+
 ## 0.4.0
 
 ### Changed

@@ -110,6 +110,10 @@ inputs:
     description: When true, create a completed Check Run named JEV CI Pathfinder whose conclusion follows policy/decision. Requires checks: write.
     required: false
     default: 'false'
+  telemetry:
+    description: When true, emit a structured JSON info log with duration_ms, provider, provisional, run_count, and cache_hit (no paths or secrets).
+    required: false
+    default: 'false'
   trust_repo_jev_endpoint:
     description: Allow jev_endpoint from repository config to receive credentials. Leave false unless that file is protected.
     required: false

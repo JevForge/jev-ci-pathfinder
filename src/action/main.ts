@@ -35,6 +35,7 @@ import {
   maybeCreateCheckRun,
   resolveHeadSha,
 } from '../github/check-run.js';
+import { formatTelemetryLine } from '../telemetry.js';
 import { join } from 'node:path';
 import type { HistoryRun } from '../schemas/pathfinder.js';
 import {
@@ -174,6 +175,7 @@ export async function runAction(io: ActionIO): Promise<void> {
 }
 
 async function run(io: ActionIO): Promise<void> {
+  const started = Date.now();
   const workspace = io.workspace;
   const jeConfig = loadJeConfig(workspace, input(io, 'jev_config_path') || '.jev/config.yml');
   const loaded = loadPathfinderConfig(
@@ -406,5 +408,19 @@ async function run(io: ActionIO): Promise<void> {
     } else {
       io.setFailed(`[JEV CI Pathfinder] ${result.failureMessage}`);
     }
+  }
+
+  if (parseBool(input(io, 'telemetry'), false)) {
+    io.info(
+      formatTelemetryLine({
+        duration_ms: Date.now() - started,
+        provider: result.provider,
+        provisional: result.provisional,
+        run_count: result.runJobs.length,
+        cache_hit: cacheHit,
+        decision: result.decision,
+        decision_mode: decisionMode,
+      }),
+    );
   }
 }

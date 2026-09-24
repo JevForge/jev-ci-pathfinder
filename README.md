@@ -218,6 +218,7 @@ Prefer `fromJSON(run_jobs)` over CSV. `contains` on a comma-separated string can
 | `cache_decisions` | no | `false` | Restore/save the typed decision via the Actions cache |
 | `comment_on_github` | no | `false` | Upsert an idempotent PR comment (`<!-- jev-ci-pathfinder -->`); needs `pull-requests: write` |
 | `create_check_run` | no | `false` | Create Check Run “JEV CI Pathfinder”; needs `checks: write` |
+| `telemetry` | no | `false` | Emit structured JSON info log (duration, provider, counts — no paths/secrets) |
 | `require_path_hits` | no | `true` | Path-matched jobs cannot be skipped by Jev |
 | `trust_repo_jev_endpoint` | no | `false` | Allow repo-configured endpoint to receive credentials |
 | `token` | no | `${{ github.token }}` | Read PR files and optional Actions history |
