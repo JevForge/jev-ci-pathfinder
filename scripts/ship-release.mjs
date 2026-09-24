@@ -13,21 +13,25 @@ if (!pr || !version) {
 
 function sh(cmd) {
   console.log(`$ ${cmd}`);
-  execSync(cmd, { stdio: 'inherit' });
+  execSync(cmd, { stdio: 'inherit', shell: true });
+}
+
+function sleep(ms) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 }
 
 try {
   sh(`gh pr checks ${pr} --watch`);
 } catch {
-  // checks may not exist yet; retry once
-  sh('sleep 15');
+  sleep(15_000);
   sh(`gh pr checks ${pr} --watch`);
 }
 sh(`gh pr merge ${pr} --squash --delete-branch`);
 sh(`gh workflow run Release --ref main -f version=${version} -f move_major_tag=true`);
-sh('sleep 8');
+sleep(8_000);
 const run = execSync('gh run list --workflow Release --limit 1 --json databaseId -q ".[0].databaseId"', {
   encoding: 'utf8',
+  shell: true,
 }).trim();
 sh(`gh run watch ${run} --exit-status`);
 sh(`gh release view v${version} --json url`);

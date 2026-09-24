@@ -239,6 +239,7 @@ Prefer `fromJSON(run_jobs)` over CSV. `contains` on a comma-separated string can
 | `jev_provider` | Provider that was called (never silently swapped) |
 | `cache_hit` | `true` when the decision was restored from the Actions cache |
 | `matrix` | `{"include":[{"job":"unit"},...]}` for `strategy.matrix` |
+| `if_snippets` | JSON map of job id → suggested `if: contains(fromJSON(...), 'id')` |
 
 `run_jobs` and `skip_jobs` always partition the configured allowlist.
 

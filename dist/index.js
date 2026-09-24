@@ -111440,6 +111440,26 @@ async function saveDecisionCache(input2) {
 function buildMatrixOutput(runJobs) {
   return JSON.stringify({ include: runJobs.map((job) => ({ job })) });
 }
+function buildJobIfSnippets(jobIds, runJobsExpr = "needs.pathfinder.outputs.run_jobs") {
+  const out = {};
+  for (const id of jobIds) {
+    out[id] = `contains(fromJSON(${runJobsExpr}), '${id}')`;
+  }
+  return out;
+}
+function formatIfSnippetsMarkdown(snippets, runJobs) {
+  const lines = [
+    "### Suggested job conditions",
+    "",
+    "Prefer `fromJSON(run_jobs)` over CSV \u2014 `contains` on a comma-separated string can match a job id prefix.",
+    ""
+  ];
+  for (const id of Object.keys(snippets)) {
+    const willRun = runJobs.includes(id);
+    lines.push(`- \`${id}\` (${willRun ? "run" : "skip"}): \`if: ${snippets[id]}\``);
+  }
+  return lines.join("\n");
+}
 
 // src/action/main.ts
 var import_node_path5 = require("node:path");
@@ -111739,6 +111759,8 @@ async function run(io) {
   io.setOutput("jev_provider", result.provider);
   io.setOutput("cache_hit", String(cacheHit));
   io.setOutput("matrix", buildMatrixOutput(result.runJobs));
+  const ifSnippets = buildJobIfSnippets(loaded.jobs.map((job) => job.id));
+  io.setOutput("if_snippets", JSON.stringify(ifSnippets));
   await io.summary(
     [
       "## JEV CI Pathfinder",
@@ -111749,7 +111771,9 @@ async function run(io) {
       "",
       `Skip: ${result.skipJobs.join(", ") || "(none)"}`,
       "",
-      result.summary
+      result.summary,
+      "",
+      formatIfSnippetsMarkdown(ifSnippets, result.runJobs)
     ].join("\n")
   );
   if (result.provisional) io.warning(`[JEV CI Pathfinder] ${result.summary}`);

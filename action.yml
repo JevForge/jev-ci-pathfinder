@@ -144,6 +144,8 @@ outputs:
     description: 'true when the decision was restored from the Actions cache.'
   matrix:
     description: JSON object for strategy.matrix — {"include":[{"job":"unit"},...]}.
+  if_snippets:
+    description: JSON map of job id to a suggested if: expression using fromJSON(run_jobs).
 
 runs:
   using: node24

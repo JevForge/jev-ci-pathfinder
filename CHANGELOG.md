@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.3
+
+### Added
+
+* `if_snippets` output (JSON map of job id → suggested `if:` expression) and Job Summary snippets. Documents that CSV `contains` can match job id prefixes.
+
 ## 0.2.2
 
 ### Added
