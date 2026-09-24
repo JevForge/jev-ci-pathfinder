@@ -206,6 +206,7 @@ Prefer `fromJSON(run_jobs)` over CSV. `contains` on a comma-separated string can
 | `history_path` | no | `.jev/ci-history.json` | Local history evidence |
 | `history_lookback` | no | config or `10` | 1–20 runs |
 | `history_branch` | no | _(empty)_ | Filter history to one branch |
+| `history_job_id_map` | no | _(empty)_ | JSON map of Actions job display name → allowlisted job id |
 | `monorepo_plan` | no | _(empty)_ | JSON from JEV Monorepo Navigator |
 | `monorepo_authoritative` | no | `false` | Union mapped allowlisted jobs into the run set |
 | `discover_monorepo` | no | `true` | Discover pnpm / npm workspaces / nx projects |

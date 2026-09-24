@@ -62,6 +62,10 @@ inputs:
     description: Only count history runs for this branch. Empty counts every run in the file or API page.
     required: false
     default: ''
+  history_job_id_map:
+    description: Optional JSON object mapping GitHub Actions job display names to allowlisted job ids (name→id). Prefer when workflow jobs use a custom name: field.
+    required: false
+    default: ''
   monorepo_plan:
     description: JSON object from JEV Monorepo Navigator with affected_projects and execution_plan.
     required: false

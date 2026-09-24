@@ -95693,6 +95693,50 @@ function assertSha(value) {
   if (/^0+$/.test(value)) return null;
   return SHA.test(value) ? value : null;
 }
+function parseHistoryJobIdMap(raw) {
+  if (!raw.trim()) return {};
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error("history_job_id_map is not valid JSON");
+  }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error("history_job_id_map must be a JSON object of name\u2192id");
+  }
+  const out = {};
+  for (const [name25, id] of Object.entries(parsed)) {
+    if (typeof id !== "string" || !/^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(id)) {
+      throw new Error(`history_job_id_map has invalid job id for ${name25}`);
+    }
+    if (!name25 || name25.length > 128) throw new Error("history_job_id_map has an invalid job name key");
+    out[name25] = id;
+  }
+  return out;
+}
+function resolveFailedJobIds(jobs, allowlist, nameToId) {
+  const failed = [];
+  for (const job of jobs) {
+    if (job.conclusion !== "failure" && job.conclusion !== "timed_out") continue;
+    const candidates = [
+      typeof job.name === "string" ? job.name : null,
+      typeof job.name === "string" ? nameToId[job.name] : null
+    ].filter((value) => typeof value === "string" && value.length > 0);
+    let chosen = null;
+    for (const candidate of candidates) {
+      if (allowlist.has(candidate) && /^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(candidate)) {
+        chosen = candidate;
+        break;
+      }
+    }
+    if (!chosen) {
+      const raw = typeof job.name === "string" ? job.name : "";
+      if (/^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(raw) && allowlist.has(raw)) chosen = raw;
+    }
+    if (chosen) failed.push(chosen);
+  }
+  return [...new Set(failed)].slice(0, 64);
+}
 async function githubJson(fetchImpl, token, url, timeoutMs) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -95717,6 +95761,8 @@ async function fetchActionHistory(input2) {
   const repo = assertGithubName(input2.repo, "repo");
   const lookback = Math.min(20, Math.max(1, input2.lookback));
   const branch = safeBranch(input2.branch);
+  const allow = new Set(input2.allowlist ?? []);
+  const nameToId = input2.nameToId ?? {};
   const query = new URLSearchParams({ per_page: String(lookback) });
   if (branch) query.set("branch", branch);
   const runsUrl = `https://api.github.com/repos/${owner}/${repo}/actions/runs?${query.toString()}`;
@@ -95730,7 +95776,7 @@ async function fetchActionHistory(input2) {
     const jobsResponse = await githubJson(input2.fetchImpl, input2.token, jobsUrl, input2.timeoutMs);
     if (!jobsResponse.ok) continue;
     const jobs = jobsResponse.body?.jobs ?? [];
-    const failed = jobs.filter((job) => (job.conclusion === "failure" || job.conclusion === "timed_out") && typeof job.name === "string").map((job) => job.name).filter((name25) => /^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(name25));
+    const failed = allow.size > 0 ? resolveFailedJobIds(jobs, allow, nameToId) : jobs.filter((job) => (job.conclusion === "failure" || job.conclusion === "timed_out") && typeof job.name === "string").map((job) => job.name).filter((name25) => /^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(name25));
     history.push({
       head_branch: typeof run2.head_branch === "string" ? run2.head_branch : void 0,
       conclusion: run2.conclusion === "timed_out" ? "timed_out" : "failure",
@@ -111609,6 +111655,8 @@ async function collectHistory(io, enabled, jobs, lookback, timeoutMs) {
   let runs = fileRuns ?? [];
   let available = fileRuns != null;
   const token = input(io, "token");
+  const allowlist = jobs.map((job) => job.id);
+  const nameToId = parseHistoryJobIdMap(input(io, "history_job_id_map"));
   if (token && io.repo.owner && io.repo.repo) {
     try {
       const apiRuns = await fetchActionHistory({
@@ -111618,7 +111666,9 @@ async function collectHistory(io, enabled, jobs, lookback, timeoutMs) {
         repo: io.repo.repo,
         branch: safeBranch(input(io, "history_branch") || void 0),
         lookback,
-        timeoutMs
+        timeoutMs,
+        allowlist,
+        nameToId
       });
       runs = [...fileRuns ?? [], ...apiRuns].slice(0, lookback);
       available = true;
@@ -111807,6 +111857,7 @@ var names = [
   "history_path",
   "history_lookback",
   "history_branch",
+  "history_job_id_map",
   "monorepo_plan",
   "monorepo_authoritative",
   "discover_monorepo",
