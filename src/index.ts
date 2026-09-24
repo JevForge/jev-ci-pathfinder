@@ -17,6 +17,7 @@ const names = [
   'history_path',
   'history_lookback',
   'history_branch',
+  'history_job_id_map',
   'monorepo_plan',
   'monorepo_authoritative',
   'discover_monorepo',

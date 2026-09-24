@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.1
+
+### Added
+
+* History API prefers allowlisted job ids; optional `history_job_id_map` (JSON name→id) maps GitHub Actions display names to config job ids. Unmapped/non-allowlisted names are dropped.
+
 ## 0.3.0
 
 ### Added

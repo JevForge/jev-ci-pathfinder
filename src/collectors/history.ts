@@ -69,7 +69,63 @@ interface GithubRun {
 
 interface GithubJob {
   name?: string;
+  /** Workflow job id when present (preferred over display name). */
+  id?: number;
   conclusion?: string | null;
+}
+
+export function parseHistoryJobIdMap(raw: string): Record<string, string> {
+  if (!raw.trim()) return {};
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw) as unknown;
+  } catch {
+    throw new Error('history_job_id_map is not valid JSON');
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('history_job_id_map must be a JSON object of name→id');
+  }
+  const out: Record<string, string> = {};
+  for (const [name, id] of Object.entries(parsed as Record<string, unknown>)) {
+    if (typeof id !== 'string' || !/^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(id)) {
+      throw new Error(`history_job_id_map has invalid job id for ${name}`);
+    }
+    if (!name || name.length > 128) throw new Error('history_job_id_map has an invalid job name key');
+    out[name] = id;
+  }
+  return out;
+}
+
+export function resolveFailedJobIds(
+  jobs: GithubJob[],
+  allowlist: Set<string>,
+  nameToId: Record<string, string>,
+): string[] {
+  const failed: string[] = [];
+  for (const job of jobs) {
+    if (job.conclusion !== 'failure' && job.conclusion !== 'timed_out') continue;
+    // GitHub Actions API exposes the workflow job id as `name` when the job key is used;
+    // some runners populate a friendlier display name. Prefer allowlist match on name,
+    // then mapped name→id, then keep name only if it already looks like a job id.
+    const candidates = [
+      typeof job.name === 'string' ? job.name : null,
+      typeof job.name === 'string' ? nameToId[job.name] : null,
+    ].filter((value): value is string => typeof value === 'string' && value.length > 0);
+
+    let chosen: string | null = null;
+    for (const candidate of candidates) {
+      if (allowlist.has(candidate) && /^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(candidate)) {
+        chosen = candidate;
+        break;
+      }
+    }
+    if (!chosen) {
+      const raw = typeof job.name === 'string' ? job.name : '';
+      if (/^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(raw) && allowlist.has(raw)) chosen = raw;
+    }
+    if (chosen) failed.push(chosen);
+  }
+  return [...new Set(failed)].slice(0, 64);
 }
 
 async function githubJson(
@@ -105,11 +161,15 @@ export async function fetchActionHistory(input: {
   branch?: string;
   lookback: number;
   timeoutMs: number;
+  allowlist?: string[];
+  nameToId?: Record<string, string>;
 }): Promise<HistoryRun[]> {
   const owner = assertGithubName(input.owner, 'owner');
   const repo = assertGithubName(input.repo, 'repo');
   const lookback = Math.min(20, Math.max(1, input.lookback));
   const branch = safeBranch(input.branch);
+  const allow = new Set(input.allowlist ?? []);
+  const nameToId = input.nameToId ?? {};
   const query = new URLSearchParams({ per_page: String(lookback) });
   if (branch) query.set('branch', branch);
   const runsUrl = `https://api.github.com/repos/${owner}/${repo}/actions/runs?${query.toString()}`;
@@ -123,10 +183,13 @@ export async function fetchActionHistory(input: {
     const jobsResponse = await githubJson(input.fetchImpl, input.token, jobsUrl, input.timeoutMs);
     if (!jobsResponse.ok) continue;
     const jobs = (jobsResponse.body as { jobs?: GithubJob[] } | null)?.jobs ?? [];
-    const failed = jobs
-      .filter(job => (job.conclusion === 'failure' || job.conclusion === 'timed_out') && typeof job.name === 'string')
-      .map(job => job.name as string)
-      .filter(name => /^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(name));
+    const failed =
+      allow.size > 0
+        ? resolveFailedJobIds(jobs, allow, nameToId)
+        : jobs
+            .filter(job => (job.conclusion === 'failure' || job.conclusion === 'timed_out') && typeof job.name === 'string')
+            .map(job => job.name as string)
+            .filter(name => /^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(name));
     history.push({
       head_branch: typeof run.head_branch === 'string' ? run.head_branch : undefined,
       conclusion: run.conclusion === 'timed_out' ? 'timed_out' : 'failure',

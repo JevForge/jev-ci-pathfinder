@@ -11,6 +11,7 @@ import {
   fetchActionHistory,
   listCompareFiles,
   listPullRequestFiles,
+  parseHistoryJobIdMap,
   pathsFromPushPayload,
   safeBranch,
   summarizeHistory,
@@ -122,6 +123,8 @@ async function collectHistory(
   let runs: HistoryRun[] = fileRuns ?? [];
   let available = fileRuns != null;
   const token = input(io, 'token');
+  const allowlist = jobs.map(job => job.id);
+  const nameToId = parseHistoryJobIdMap(input(io, 'history_job_id_map'));
   if (token && io.repo.owner && io.repo.repo) {
     try {
       const apiRuns = await fetchActionHistory({
@@ -132,6 +135,8 @@ async function collectHistory(
         branch: safeBranch(input(io, 'history_branch') || undefined),
         lookback,
         timeoutMs,
+        allowlist,
+        nameToId,
       });
       runs = [...(fileRuns ?? []), ...apiRuns].slice(0, lookback);
       available = true;
