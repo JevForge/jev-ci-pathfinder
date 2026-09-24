@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0
+
+### Changed
+
+* Extracted `JevProvider` / `EvaluationRequest` / `JevProviderOptions` into `src/jev/contract.ts`. Adapters import from that module in preparation for swapping to `@jevforge/core` when published (no new npm dependency).
+
 ## 0.3.4
 
 ### Changed

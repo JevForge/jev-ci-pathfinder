@@ -1,7 +1,7 @@
 import type { JevProviderId } from '../schemas/enums.js';
 import { createCustomCompatibleProvider } from './custom-compatible.js';
 import { createTypesafeNativeProvider } from './typesafe-native.js';
-import type { JevProvider, JevProviderOptions } from './types.js';
+import type { JevProvider, JevProviderOptions } from './contract.js';
 import { createVercelAiGatewayProvider } from './vercel-ai-gateway.js';
 
 export function createJevProvider(id: JevProviderId, options: JevProviderOptions): JevProvider {

@@ -398,7 +398,7 @@ npm run all
 
 Requires Node.js 24+. `npm run all` typechecks, runs coverage, and rebuilds the committed `dist/index.js` bundle (consumers do not run `npm install` for this Action).
 
-`@jevforge/core` is not published yet; `src/jev` holds the local provider contract.
+`@jevforge/core` is not published yet. Provider types live in [`src/jev/contract.ts`](src/jev/contract.ts); swap adapter imports to `@jevforge/core` when that package ships.
 
 ## Contributing
 
