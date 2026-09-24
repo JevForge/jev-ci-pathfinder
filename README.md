@@ -118,7 +118,7 @@ jobs:
       - run: npm test
 ```
 
-Pin `@v0` for the floating major, `@v0.1.1` for a fixed release, or a commit SHA for the strongest supply-chain guarantee.
+Pin `@v0` for the floating major, `@v0.1.2` for a fixed release, or a commit SHA for the strongest supply-chain guarantee.
 
 ## Complete Example
 
@@ -375,7 +375,7 @@ See [SECURITY.md](SECURITY.md). Report vulnerabilities privately — never open 
 | Pin | Meaning |
 | --- | ------- |
 | `@v0` | Floating major (moves with new `0.x` releases) |
-| `@v0.1.1` | Exact SemVer release |
+| `@v0.1.2` | Exact SemVer release |
 | `@<sha>` | Strongest supply-chain pin |
 
 Marketplace listing notes: [docs/marketplace.md](docs/marketplace.md).
