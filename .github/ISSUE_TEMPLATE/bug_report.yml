@@ -32,8 +32,8 @@ body:
     id: version
     attributes:
       label: Action version
-      description: For example v0.1.0 or a commit SHA
-      placeholder: v0.1.0
+      placeholder: v0.1.1
+      description: For example v0.1.1 or a commit SHA
     validations:
       required: true
   - type: textarea

@@ -1,0 +1,18 @@
+# Minimal Pathfinder step
+
+Use after `actions/checkout` in a job that has already defined `.jev/ci-pathfinder.yml`.
+
+```yaml
+- id: plan
+  uses: JevForge/jev-ci-pathfinder@v0
+  env:
+    AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY }}
+```
+
+Then gate another job:
+
+```yaml
+if: contains(fromJSON(needs.pathfinder.outputs.run_jobs), 'unit')
+```
+
+See [workflows/selective-ci.yml](workflows/selective-ci.yml) for a full workflow.

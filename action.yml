@@ -1,5 +1,5 @@
 name: JEV CI Pathfinder
-description: Choose which allowlisted CI jobs to run or skip after a change using typed Jev decisions.
+description: Select which allowlisted CI jobs to run after a change. Jev decides; your workflow stays in control.
 author: JevForge
 branding:
   icon: git-branch

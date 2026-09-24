@@ -148,7 +148,9 @@ export async function runAction(io: ActionIO): Promise<void> {
     await run(io);
   } catch (error) {
     const message = redactSecrets(error instanceof Error ? error.message : String(error)).slice(0, 500);
-    io.setFailed(message || 'CI Pathfinder failed');
+    io.setFailed(
+      `[JEV CI Pathfinder] ${message || 'Unexpected failure. Check config_path, secrets, and provider settings.'}`,
+    );
   }
 }
 
@@ -179,7 +181,7 @@ async function run(io: ActionIO): Promise<void> {
   const discoverWorkflows = parseBool(input(io, 'discover_workflows'), true);
   const authoritative = parseBool(input(io, 'monorepo_authoritative'), false);
   if (!parseBool(input(io, 'dry_run'), true)) {
-    io.info('CI Pathfinder never edits workflows. dry_run false does not enable writes.');
+    io.info('[JEV CI Pathfinder] Never edits workflows. dry_run=false does not enable writes.');
   }
 
   const changed = await collectChangedPaths(io, timeoutMs);
@@ -258,6 +260,8 @@ async function run(io: ActionIO): Promise<void> {
     ].join('\n'),
   );
 
-  if (result.provisional) io.warning(result.summary);
-  if (result.shouldFail) io.setFailed(result.failureMessage);
+  if (result.provisional) io.warning(`[JEV CI Pathfinder] ${result.summary}`);
+  if (result.shouldFail) {
+    io.setFailed(`[JEV CI Pathfinder] ${result.failureMessage}`);
+  }
 }
