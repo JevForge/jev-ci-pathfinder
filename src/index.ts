@@ -29,6 +29,7 @@ const names = [
   'decision_mode',
   'cache_decisions',
   'comment_on_github',
+  'create_check_run',
   'token',
   'dry_run',
 ] as const;

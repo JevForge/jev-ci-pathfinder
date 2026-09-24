@@ -111617,6 +111617,83 @@ function createFetchCommentClient(input2) {
   };
 }
 
+// src/github/check-run.ts
+function checkConclusion(input2) {
+  if (input2.shouldFail) return "failure";
+  if (input2.needsReview || input2.decision === "REQUEST_REVIEW" || input2.decision === "ABSTAIN") {
+    return "neutral";
+  }
+  return "success";
+}
+function buildCheckSummary(input2) {
+  return [
+    "### JEV CI Pathfinder",
+    "",
+    "| Field | Value |",
+    "| --- | --- |",
+    `| Decision | \`${input2.decision}\` |`,
+    `| Provisional | ${input2.provisional ? "yes" : "no"} |`,
+    `| Confidence | ${input2.confidence.toFixed(3)} |`,
+    `| Policy fail | ${input2.shouldFail ? "yes" : "no"} |`,
+    `| Reason codes | ${input2.reasonCodes.map((c) => `\`${c}\``).join(", ") || "`(none)`"} |`,
+    `| Run | ${input2.runJobs.map((id) => `\`${id}\``).join(", ") || "`(none)`"} |`,
+    `| Skip | ${input2.skipJobs.map((id) => `\`${id}\``).join(", ") || "`(none)`"} |`,
+    "",
+    input2.summary
+  ].join("\n");
+}
+async function maybeCreateCheckRun(enabled, headSha, client, payload) {
+  if (!enabled || !client || !headSha) return "skipped";
+  const conclusion = checkConclusion(payload);
+  await client.createCheckRun({
+    name: "JEV CI Pathfinder",
+    headSha,
+    conclusion,
+    title: `${payload.decision}${payload.provisional ? " (provisional)" : ""}`,
+    summary: buildCheckSummary(payload)
+  });
+  return "created";
+}
+function createFetchCheckRunClient(input2) {
+  const owner = assertGithubName(input2.owner, "owner");
+  const repo = assertGithubName(input2.repo, "repo");
+  return {
+    async createCheckRun(check2) {
+      const sha = assertSha(check2.headSha);
+      if (!sha) throw new Error("Invalid head SHA for check run");
+      const response = await input2.fetchImpl(`https://api.github.com/repos/${owner}/${repo}/checks`, {
+        method: "POST",
+        headers: {
+          accept: "application/vnd.github+json",
+          authorization: `Bearer ${input2.token}`,
+          "user-agent": "jev-ci-pathfinder",
+          "content-type": "application/json"
+        },
+        body: JSON.stringify({
+          name: check2.name,
+          head_sha: sha,
+          status: "completed",
+          conclusion: check2.conclusion,
+          output: {
+            title: check2.title,
+            summary: check2.summary
+          }
+        })
+      });
+      if (!response.ok) {
+        throw new Error(`create check run failed with HTTP ${response.status}`);
+      }
+    }
+  };
+}
+function resolveHeadSha(payload, envSha) {
+  const pr = payload.pull_request;
+  if (pr?.head?.sha && typeof pr.head.sha === "string") return assertSha(pr.head.sha);
+  if (typeof payload.after === "string") return assertSha(payload.after);
+  if (envSha) return assertSha(envSha);
+  return null;
+}
+
 // src/action/main.ts
 var import_node_path5 = require("node:path");
 
@@ -111965,6 +112042,34 @@ async function run(io) {
       io.warning(redactSecrets(message));
     }
   }
+  const checkEnabled = parseBool(input(io, "create_check_run"), false);
+  if (checkEnabled) {
+    const token = input(io, "token");
+    try {
+      const headSha = resolveHeadSha(io.payload, io.env.GITHUB_SHA);
+      const client = token && io.repo.owner && io.repo.repo ? createFetchCheckRunClient({
+        fetchImpl: io.fetch,
+        token,
+        owner: io.repo.owner,
+        repo: io.repo.repo
+      }) : null;
+      const status = await maybeCreateCheckRun(true, headSha, client, {
+        decision: result.decision,
+        runJobs: result.runJobs,
+        skipJobs: result.skipJobs,
+        provisional: result.provisional,
+        confidence: result.confidence,
+        reasonCodes: result.reasonCodes,
+        summary: result.summary,
+        shouldFail: result.shouldFail,
+        needsReview: result.needsReview
+      });
+      io.info(`[JEV CI Pathfinder] Check run: ${status}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "check run failed";
+      io.warning(redactSecrets(message));
+    }
+  }
   if (result.provisional) io.warning(`[JEV CI Pathfinder] ${result.summary}`);
   if (result.shouldFail) {
     io.setFailed(`[JEV CI Pathfinder] ${result.failureMessage}`);
@@ -111999,6 +112104,7 @@ var names = [
   "decision_mode",
   "cache_decisions",
   "comment_on_github",
+  "create_check_run",
   "token",
   "dry_run"
 ];
