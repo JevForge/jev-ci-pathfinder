@@ -20,11 +20,12 @@ import { buildMonorepoEvidence, discoverProjects, parseMonorepoPlan } from '../c
 import { readCiInventory, parseCiTools } from '../collectors/workspace-ci.js';
 import { createJevProvider, credentialEnvName } from '../jev/factory.js';
 import { unavailableDecision } from '../jev/normalize.js';
-import type { JevProvider } from '../jev/types.js';
 import { executePathfinder } from '../decision/execute.js';
+import { executeDeterministic } from '../decision/deterministic.js';
 import type { HistoryRun } from '../schemas/pathfinder.js';
 import {
   parseBool,
+  parseDecisionMode,
   parseLookback,
   parseTimeout,
   parseUnitInterval,
@@ -180,6 +181,7 @@ async function run(io: ActionIO): Promise<void> {
   const discoverMonorepo = parseBool(input(io, 'discover_monorepo'), true);
   const discoverWorkflows = parseBool(input(io, 'discover_workflows'), true);
   const authoritative = parseBool(input(io, 'monorepo_authoritative'), false);
+  const decisionMode = parseDecisionMode(input(io, 'decision_mode'));
   if (!parseBool(input(io, 'dry_run'), true)) {
     io.info('[JEV CI Pathfinder] Never edits workflows. dry_run=false does not enable writes.');
   }
@@ -203,33 +205,47 @@ async function run(io: ActionIO): Promise<void> {
       )
     : { discovered: false, jobIds: [], sources: [], jobs: [] };
 
-  const provider: JevProvider = settings.refusal
-    ? {
-        id: settings.provider,
-        async evaluateCiSelection() {
-          return unavailableDecision(settings.provider, settings.refusal!);
-        },
-      }
-    : createJevProvider(settings.provider, {
-        apiKey: io.env[credentialEnvName(settings.provider)],
-        endpoint: settings.endpoint,
-        model: settings.model,
-        timeoutMs,
-        fetchImpl: io.fetch,
-      });
+  const result =
+    decisionMode === 'deterministic'
+      ? executeDeterministic({
+          provider: settings.provider,
+          jobs: loaded.jobs,
+          changedPaths: changed.paths,
+          requirePathHits,
+          history,
+          monorepo,
+          inventory,
+          noChangedPaths: changed.paths.length === 0,
+        })
+      : await executePathfinder({
+          provider: settings.refusal
+            ? {
+                id: settings.provider,
+                async evaluateCiSelection() {
+                  return unavailableDecision(settings.provider, settings.refusal!);
+                },
+              }
+            : createJevProvider(settings.provider, {
+                apiKey: io.env[credentialEnvName(settings.provider)],
+                endpoint: settings.endpoint,
+                model: settings.model,
+                timeoutMs,
+                fetchImpl: io.fetch,
+              }),
+          jobs: loaded.jobs,
+          changedPaths: changed.paths,
+          pathsTruncated: changed.truncated,
+          minConfidence,
+          policy,
+          requirePathHits,
+          history,
+          monorepo,
+          inventory,
+        });
 
-  const result = await executePathfinder({
-    provider,
-    jobs: loaded.jobs,
-    changedPaths: changed.paths,
-    pathsTruncated: changed.truncated,
-    minConfidence,
-    policy,
-    requirePathHits,
-    history,
-    monorepo,
-    inventory,
-  });
+  if (decisionMode === 'deterministic') {
+    io.info('[JEV CI Pathfinder] decision_mode=deterministic — Jev was not called.');
+  }
 
   io.setOutput('decision', result.decision);
   io.setOutput('run_jobs', JSON.stringify(result.runJobs));

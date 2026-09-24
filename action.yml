@@ -90,6 +90,10 @@ inputs:
     description: Keep jobs whose configured paths match the diff even if Jev would skip them.
     required: false
     default: 'true'
+  decision_mode:
+    description: 'jev (default) asks Jev; deterministic selects from path hits, always-on, history, and authoritative monorepo jobs without calling Jev.'
+    required: false
+    default: jev
   trust_repo_jev_endpoint:
     description: Allow jev_endpoint from repository config to receive credentials. Leave false unless that file is protected.
     required: false

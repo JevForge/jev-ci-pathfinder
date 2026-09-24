@@ -1,5 +1,5 @@
 import type { JeConfig } from '../schemas/pathfinder.js';
-import type { JevProviderId } from '../schemas/enums.js';
+import { DECISION_MODES, type DecisionMode, type JevProviderId } from '../schemas/enums.js';
 import { coalesceProvider } from '../collectors/config.js';
 import { assertModelId, assertPublicHttpsEndpoint } from '../utils/endpoint.js';
 
@@ -84,4 +84,12 @@ export function parseLookback(value: string | undefined, fallback: number): numb
     throw new Error('history_lookback must be an integer from 1 to 20');
   }
   return number;
+}
+
+export function parseDecisionMode(value: string | undefined): DecisionMode {
+  const mode = (value?.trim() || 'jev') as DecisionMode;
+  if (!DECISION_MODES.includes(mode)) {
+    throw new Error(`decision_mode must be one of: ${DECISION_MODES.join(', ')}`);
+  }
+  return mode;
 }

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0
+
+### Added
+
+* `decision_mode` input: `jev` (default) or `deterministic`. Deterministic mode selects jobs from path hits, always-on flags, history reruns, and authoritative monorepo mappings without calling Jev (`DETERMINISTIC_ONLY`, `provisional=true`).
+
 ## 0.1.2
 
 ### Changed

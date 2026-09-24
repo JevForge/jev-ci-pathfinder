@@ -212,6 +212,7 @@ Prefer `fromJSON(run_jobs)` over CSV. `contains` on a comma-separated string can
 | `discover_workflows` | no | `true` | Read CI inventory (job ids only; never step scripts) |
 | `workflows_dir` | no | `.github/workflows` | GitHub Actions workflow directory |
 | `ci_tools` | no | `github-actions` | `github-actions`, `circleci`, `jenkins` |
+| `decision_mode` | no | `jev` | `jev` asks Jev; `deterministic` uses path/always/history/monorepo rules only |
 | `require_path_hits` | no | `true` | Path-matched jobs cannot be skipped by Jev |
 | `trust_repo_jev_endpoint` | no | `false` | Allow repo-configured endpoint to receive credentials |
 | `token` | no | `${{ github.token }}` | Read PR files and optional Actions history |
