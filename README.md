@@ -16,6 +16,15 @@ Running every job on every push wastes minutes and money. Letting an unconstrain
     AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY }}
 ```
 
+Prefer less boilerplate? Use the composite wrapper (checkout + Pathfinder + re-exported outputs):
+
+```yaml
+- id: plan
+  uses: JevForge/jev-ci-pathfinder/composite@v0
+  env:
+    AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY }}
+```
+
 ## Features
 
 * Typed CI path selection powered by Jev (`experimental_evaluate`, not free-form generation)
