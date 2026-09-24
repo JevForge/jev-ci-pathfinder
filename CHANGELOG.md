@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.3
+
+### Added
+
+* Composite wrapper at `composite/action.yml`: `actions/checkout@v4` + Pathfinder with re-exported outputs. Use `JevForge/jev-ci-pathfinder/composite@v0`.
+
 ## 0.4.2
 
 ### Added

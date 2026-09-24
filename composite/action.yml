@@ -1,0 +1,224 @@
+name: JEV CI Pathfinder (composite)
+description: Checkout the repository and run JEV CI Pathfinder, re-exporting its outputs.
+author: JevForge
+branding:
+  icon: git-branch
+  color: purple
+
+inputs:
+  config_path:
+    description: Path to the pathfinder config with the job allowlist, path globs, and dependencies.
+    required: false
+    default: .jev/ci-pathfinder.yml
+  changed_paths:
+    description: Newline-separated list or JSON array of changed repo-relative paths. Empty collects paths from the GitHub event.
+    required: false
+    default: ''
+  job_map:
+    description: Optional JSON array that replaces the jobs in the config file.
+    required: false
+    default: ''
+  jev_provider:
+    description: 'Jev provider: vercel-ai-gateway, typesafe-native, or custom-compatible. Defaults to vercel-ai-gateway.'
+    required: false
+    default: ''
+  jev_model:
+    description: Model id. vercel-ai-gateway defaults to typesafe-ai/jev. Native and custom providers require a catalog model id.
+    required: false
+    default: ''
+  jev_endpoint:
+    description: HTTPS endpoint for typesafe-native or custom-compatible.
+    required: false
+    default: ''
+  jev_timeout_ms:
+    description: Provider timeout in milliseconds, from 1000 to 120000.
+    required: false
+    default: '45000'
+  jev_config_path:
+    description: Shared Jev config path.
+    required: false
+    default: .jev/config.yml
+  min_confidence:
+    description: Minimum confidence required before a SELECT_JOBS result can skip jobs.
+    required: false
+    default: ''
+  low_confidence_policy:
+    description: 'Policy when Jev is unavailable, rejected, or below min_confidence: fail, warn, request-review, or no-op.'
+    required: false
+    default: ''
+  include_history:
+    description: Read history file and, when a token is available, recent GitHub Actions failures.
+    required: false
+    default: 'false'
+  history_path:
+    description: JSON file of recent runs used as history evidence.
+    required: false
+    default: .jev/ci-history.json
+  history_lookback:
+    description: Maximum history runs to consider, from 1 to 20.
+    required: false
+    default: ''
+  history_branch:
+    description: Only count history runs for this branch.
+    required: false
+    default: ''
+  history_job_id_map:
+    description: Optional JSON object mapping GitHub Actions job display names to allowlisted job ids.
+    required: false
+    default: ''
+  monorepo_plan:
+    description: JSON object from JEV Monorepo Navigator.
+    required: false
+    default: ''
+  monorepo_authoritative:
+    description: Union allowlisted jobs mapped from affected monorepo projects into the run set.
+    required: false
+    default: 'false'
+  discover_monorepo:
+    description: Discover pnpm, npm, or nx projects in the workspace.
+    required: false
+    default: 'true'
+  discover_workflows:
+    description: Read CI inventory as evidence.
+    required: false
+    default: 'true'
+  workflows_dir:
+    description: Directory of GitHub Actions workflow files.
+    required: false
+    default: .github/workflows
+  ci_tools:
+    description: Comma-separated inventory readers.
+    required: false
+    default: github-actions
+  require_path_hits:
+    description: Keep jobs whose configured paths match the diff even if Jev would skip them.
+    required: false
+    default: 'true'
+  decision_mode:
+    description: 'jev (default) asks Jev; deterministic selects without calling Jev.'
+    required: false
+    default: jev
+  cache_decisions:
+    description: Restore/save the typed decision via the Actions cache.
+    required: false
+    default: 'false'
+  comment_on_github:
+    description: 'Upsert an idempotent PR comment. Requires pull-requests: write.'
+    required: false
+    default: 'false'
+  create_check_run:
+    description: 'Create a completed Check Run. Requires checks: write.'
+    required: false
+    default: 'false'
+  telemetry:
+    description: Emit structured JSON info log (no paths or secrets).
+    required: false
+    default: 'false'
+  trust_repo_jev_endpoint:
+    description: Allow jev_endpoint from repository config to receive credentials.
+    required: false
+    default: 'false'
+  token:
+    description: Token used for checkout (contents) and Pathfinder GitHub API reads.
+    required: false
+    default: ${{ github.token }}
+  dry_run:
+    description: When true (default), do not fail the step on policy fail.
+    required: false
+    default: 'true'
+
+outputs:
+  decision:
+    description: 'SELECT_JOBS, ABSTAIN, or REQUEST_REVIEW.'
+    value: ${{ steps.plan.outputs.decision }}
+  run_jobs:
+    description: JSON array of allowlisted job ids to run.
+    value: ${{ steps.plan.outputs.run_jobs }}
+  skip_jobs:
+    description: JSON array of allowlisted job ids to skip.
+    value: ${{ steps.plan.outputs.skip_jobs }}
+  run_jobs_csv:
+    description: Comma-separated run_jobs.
+    value: ${{ steps.plan.outputs.run_jobs_csv }}
+  skip_jobs_csv:
+    description: Comma-separated skip_jobs.
+    value: ${{ steps.plan.outputs.skip_jobs_csv }}
+  confidence:
+    description: Jev confidence from 0 to 1.
+    value: ${{ steps.plan.outputs.confidence }}
+  reason_codes:
+    description: JSON array of stable reason codes.
+    value: ${{ steps.plan.outputs.reason_codes }}
+  summary:
+    description: Plain-text explanation.
+    value: ${{ steps.plan.outputs.summary }}
+  provisional:
+    description: 'true when the run set came from deterministic policy.'
+    value: ${{ steps.plan.outputs.provisional }}
+  needs_review:
+    description: 'true when the request-review policy applied.'
+    value: ${{ steps.plan.outputs.needs_review }}
+  affected_paths:
+    description: JSON array of normalized changed paths.
+    value: ${{ steps.plan.outputs.affected_paths }}
+  history_applied:
+    description: JSON array of jobs added from recent history failures.
+    value: ${{ steps.plan.outputs.history_applied }}
+  monorepo_projects:
+    description: JSON array of affected project names.
+    value: ${{ steps.plan.outputs.monorepo_projects }}
+  jev_provider:
+    description: Provider that was asked.
+    value: ${{ steps.plan.outputs.jev_provider }}
+  cache_hit:
+    description: 'true when the decision was restored from cache.'
+    value: ${{ steps.plan.outputs.cache_hit }}
+  matrix:
+    description: JSON object for strategy.matrix.
+    value: ${{ steps.plan.outputs.matrix }}
+  if_snippets:
+    description: 'JSON map of job id to suggested if: expression.'
+    value: ${{ steps.plan.outputs.if_snippets }}
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        token: ${{ inputs.token }}
+
+    - name: Pathfinder
+      id: plan
+      uses: JevForge/jev-ci-pathfinder@v0
+      with:
+        config_path: ${{ inputs.config_path }}
+        changed_paths: ${{ inputs.changed_paths }}
+        job_map: ${{ inputs.job_map }}
+        jev_provider: ${{ inputs.jev_provider }}
+        jev_model: ${{ inputs.jev_model }}
+        jev_endpoint: ${{ inputs.jev_endpoint }}
+        jev_timeout_ms: ${{ inputs.jev_timeout_ms }}
+        jev_config_path: ${{ inputs.jev_config_path }}
+        min_confidence: ${{ inputs.min_confidence }}
+        low_confidence_policy: ${{ inputs.low_confidence_policy }}
+        include_history: ${{ inputs.include_history }}
+        history_path: ${{ inputs.history_path }}
+        history_lookback: ${{ inputs.history_lookback }}
+        history_branch: ${{ inputs.history_branch }}
+        history_job_id_map: ${{ inputs.history_job_id_map }}
+        monorepo_plan: ${{ inputs.monorepo_plan }}
+        monorepo_authoritative: ${{ inputs.monorepo_authoritative }}
+        discover_monorepo: ${{ inputs.discover_monorepo }}
+        discover_workflows: ${{ inputs.discover_workflows }}
+        workflows_dir: ${{ inputs.workflows_dir }}
+        ci_tools: ${{ inputs.ci_tools }}
+        require_path_hits: ${{ inputs.require_path_hits }}
+        decision_mode: ${{ inputs.decision_mode }}
+        cache_decisions: ${{ inputs.cache_decisions }}
+        comment_on_github: ${{ inputs.comment_on_github }}
+        create_check_run: ${{ inputs.create_check_run }}
+        telemetry: ${{ inputs.telemetry }}
+        trust_repo_jev_endpoint: ${{ inputs.trust_repo_jev_endpoint }}
+        token: ${{ inputs.token }}
+        dry_run: ${{ inputs.dry_run }}
