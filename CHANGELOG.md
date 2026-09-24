@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.2
+
+### Added
+
+* Marketplace/docs visual: `docs/assets/pathfinder-flow.svg` embedded in the README flow section.
+
 ## 0.4.1
 
 ### Added
