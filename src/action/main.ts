@@ -23,6 +23,7 @@ import { unavailableDecision } from '../jev/normalize.js';
 import { executePathfinder } from '../decision/execute.js';
 import { executeDeterministic } from '../decision/deterministic.js';
 import { buildCacheKey, fingerprintConfig, saveDecisionCache, tryRestoreDecisionCache } from '../decision/cache.js';
+import { buildMatrixOutput } from '../decision/outputs.js';
 import { join } from 'node:path';
 import type { HistoryRun } from '../schemas/pathfinder.js';
 import {
@@ -292,6 +293,7 @@ async function run(io: ActionIO): Promise<void> {
   io.setOutput('monorepo_projects', JSON.stringify(monorepo.affectedProjects));
   io.setOutput('jev_provider', result.provider);
   io.setOutput('cache_hit', String(cacheHit));
+  io.setOutput('matrix', buildMatrixOutput(result.runJobs));
 
   await io.summary(
     [

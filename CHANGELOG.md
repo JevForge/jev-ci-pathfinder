@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.2
+
+### Added
+
+* `matrix` output shaped as `{"include":[{"job":"<id>"},...]}` for `strategy.matrix` consumers.
+
 ## 0.2.1
 
 ### Added
