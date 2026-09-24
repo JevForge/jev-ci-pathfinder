@@ -111694,6 +111694,11 @@ function resolveHeadSha(payload, envSha) {
   return null;
 }
 
+// src/telemetry.ts
+function formatTelemetryLine(event) {
+  return JSON.stringify({ jev_ci_pathfinder_telemetry: event });
+}
+
 // src/action/main.ts
 var import_node_path5 = require("node:path");
 
@@ -111872,6 +111877,7 @@ async function runAction(io) {
   }
 }
 async function run(io) {
+  const started = Date.now();
   const workspace = io.workspace;
   const jeConfig = loadJeConfig(workspace, input(io, "jev_config_path") || ".jev/config.yml");
   const loaded = loadPathfinderConfig(
@@ -112081,6 +112087,19 @@ async function run(io) {
       io.setFailed(`[JEV CI Pathfinder] ${result.failureMessage}`);
     }
   }
+  if (parseBool(input(io, "telemetry"), false)) {
+    io.info(
+      formatTelemetryLine({
+        duration_ms: Date.now() - started,
+        provider: result.provider,
+        provisional: result.provisional,
+        run_count: result.runJobs.length,
+        cache_hit: cacheHit,
+        decision: result.decision,
+        decision_mode: decisionMode
+      })
+    );
+  }
 }
 
 // src/index.ts
@@ -112112,6 +112131,7 @@ var names = [
   "cache_decisions",
   "comment_on_github",
   "create_check_run",
+  "telemetry",
   "token",
   "dry_run"
 ];
