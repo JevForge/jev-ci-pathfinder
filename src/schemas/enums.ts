@@ -18,6 +18,7 @@ export const REASON_CODES = [
   'POLICY_NO_OP',
   'NO_CHANGED_PATHS',
   'CONFIGURED_ALLOWLIST',
+  'DETERMINISTIC_ONLY',
 ] as const;
 
 export type ReasonCode = (typeof REASON_CODES)[number];
@@ -42,6 +43,9 @@ export type LowConfidencePolicy = (typeof LOW_CONFIDENCE_POLICIES)[number];
 
 export const CI_TOOLS = ['github-actions', 'circleci', 'jenkins'] as const;
 export type CiTool = (typeof CI_TOOLS)[number];
+
+export const DECISION_MODES = ['jev', 'deterministic'] as const;
+export type DecisionMode = (typeof DECISION_MODES)[number];
 
 export const JOB_ID_PATTERN = /^[A-Za-z][A-Za-z0-9_-]{0,63}$/;
 

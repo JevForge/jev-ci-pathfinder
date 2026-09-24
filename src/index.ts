@@ -25,6 +25,7 @@ const names = [
   'ci_tools',
   'require_path_hits',
   'trust_repo_jev_endpoint',
+  'decision_mode',
   'token',
   'dry_run',
 ] as const;
