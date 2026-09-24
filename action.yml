@@ -102,6 +102,10 @@ inputs:
     description: When true, restore/save the typed decision via the Actions cache keyed by commit SHA, config, paths, provider, and decision_mode.
     required: false
     default: 'false'
+  comment_on_github:
+    description: When true on pull_request events, upsert an idempotent PR comment marked <!-- jev-ci-pathfinder --> with the run/skip table. Requires pull-requests: write.
+    required: false
+    default: 'false'
   trust_repo_jev_endpoint:
     description: Allow jev_endpoint from repository config to receive credentials. Leave false unless that file is protected.
     required: false

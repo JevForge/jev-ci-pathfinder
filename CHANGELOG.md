@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.2
+
+### Added
+
+* `comment_on_github` input (default `false`) upserts an idempotent PR comment marked `<!-- jev-ci-pathfinder -->` with the run/skip table and provisional flag. Requires `pull-requests: write`.
+
 ## 0.3.1
 
 ### Added
