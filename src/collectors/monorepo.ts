@@ -119,6 +119,14 @@ export function parseMonorepoPlan(raw: string): MonorepoPlan {
   return result.data;
 }
 
+export function parseMonorepoPlanWithMeta(raw: string): {
+  plan: MonorepoPlan;
+  versioned: boolean;
+} {
+  const plan = parseMonorepoPlan(raw);
+  return { plan, versioned: plan.plan_version === 1 };
+}
+
 export function buildMonorepoEvidence(input: {
   changedPaths: string[];
   packages: PackageMap[];

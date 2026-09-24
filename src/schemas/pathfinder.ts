@@ -44,21 +44,36 @@ export const PathfinderConfigSchema = z.object({
 
 export type PathfinderConfig = z.infer<typeof PathfinderConfigSchema>;
 
-export const MonorepoPlanSchema = z.object({
-  affected_projects: z.array(z.string().min(1).max(128)).max(200).default([]),
-  execution_plan: z
-    .array(
-      z.object({
-        project: z.string().min(1).max(128),
-        jobs: z.array(z.string().min(1).max(80)).max(50),
-      }),
-    )
-    .max(200)
-    .optional(),
-});
+export const MonorepoPlanSchema = z
+  .object({
+    plan_version: z.literal(1).optional(),
+    affected_projects: z.array(z.string().min(1).max(128)).max(200).default([]),
+    execution_plan: z
+      .array(
+        z.object({
+          project: z.string().min(1).max(128),
+          jobs: z.array(z.string().min(1).max(80)).max(50),
+        }),
+      )
+      .max(200)
+      .optional(),
+  })
+  .superRefine((value, ctx) => {
+    // Accept legacy plans without plan_version. Reject unknown future versions explicitly.
+    if (value.plan_version !== undefined && value.plan_version !== 1) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Unsupported monorepo plan_version',
+        path: ['plan_version'],
+      });
+    }
+  });
 
 export type MonorepoPlan = z.infer<typeof MonorepoPlanSchema>;
 
+export function isVersionedMonorepoPlan(plan: MonorepoPlan): boolean {
+  return plan.plan_version === 1;
+}
 export const HistoryRunSchema = z.object({
   head_branch: z.string().min(1).max(256).optional(),
   conclusion: z

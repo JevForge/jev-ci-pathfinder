@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0
+
+### Added
+
+* Monorepo Navigator contract `plan_version: 1` (legacy plans without a version remain accepted). See `docs/monorepo-plan.md`.
+
 ## 0.2.4
 
 ### Added

@@ -84,7 +84,7 @@ The deterministic executor still owns the effect: allowlist, path hits, always-o
 
 ## Quick Start
 
-1. Copy [`examples/ci-pathfinder.yml`](examples/ci-pathfinder.yml) to `.jev/ci-pathfinder.yml` in your consumer repo. Protect it with CODEOWNERS.
+1. Copy [`examples/ci-pathfinder.yml`](examples/ci-pathfinder.yml) to `.jev/ci-pathfinder.yml` in your consumer repo. Protect it with CODEOWNERS (see [`examples/CODEOWNERS`](examples/CODEOWNERS) and [`examples/branch-protection.md`](examples/branch-protection.md)).
 2. Add repository secret `AI_GATEWAY_API_KEY` (default provider).
 3. Add a workflow (see [examples/workflows/selective-ci.yml](examples/workflows/selective-ci.yml)):
 
