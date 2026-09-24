@@ -1,4 +1,4 @@
-import type { JevProvider } from '../jev/types.js';
+import type { JevProvider } from '../jev/contract.js';
 import { isSchemaRejected, unavailableDecision } from '../jev/normalize.js';
 import type { LowConfidencePolicy } from '../schemas/enums.js';
 import type { JobDefinition } from '../schemas/pathfinder.js';

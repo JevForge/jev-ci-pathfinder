@@ -1,5 +1,5 @@
 import { createGateway, experimental_evaluate as evaluate } from 'ai';
-import type { JevProvider, JevProviderOptions } from './types.js';
+import type { JevProvider, JevProviderOptions } from './contract.js';
 import { decisionFromEvaluation, isSchemaRejected, unavailableDecision } from './normalize.js';
 
 export function createVercelAiGatewayProvider(options: JevProviderOptions): JevProvider {

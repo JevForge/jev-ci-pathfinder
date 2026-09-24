@@ -1,5 +1,5 @@
 import type { JevProviderId } from '../schemas/enums.js';
-import type { JevProvider, JevProviderOptions } from './types.js';
+import type { JevProvider, JevProviderOptions } from './contract.js';
 import { decisionFromEvaluation, isSchemaRejected, unavailableDecision, type AnswerValue } from './normalize.js';
 import { assertPublicHttpsEndpoint } from '../utils/endpoint.js';
 
