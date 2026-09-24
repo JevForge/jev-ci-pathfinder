@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - id: plan
-        uses: JevForge/jev-ci-pathfinder@v0.1.0
+        uses: JevForge/jev-ci-pathfinder@v0
         env:
           AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY }}
 

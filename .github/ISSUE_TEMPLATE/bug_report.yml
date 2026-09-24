@@ -1,0 +1,56 @@
+name: Bug report
+description: Report a problem with JEV CI Pathfinder
+title: "[bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug.
+
+        **Do not include API keys, tokens, credentials, or other secrets.**
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Action version
+      description: For example v0.1.0 or a commit SHA
+      placeholder: v0.1.0
+    validations:
+      required: true
+  - type: textarea
+    id: decision
+    attributes:
+      label: Decision outputs
+      description: Paste decision, run_jobs, skip_jobs, confidence, reason_codes, and provisional when relevant.
+      render: json
+  - type: textarea
+    id: workflow
+    attributes:
+      label: Workflow snippet
+      description: Relevant YAML only. Redact secrets.
+      render: yaml
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Paste relevant Action logs with secrets removed.
+      render: shell

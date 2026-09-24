@@ -48,7 +48,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - id: plan
-        uses: JevForge/jev-ci-pathfinder@v0.1.0
+        uses: JevForge/jev-ci-pathfinder@v0
         env:
           AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY }}
 
@@ -61,7 +61,7 @@ jobs:
       - run: npm test
 ```
 
-Pin to a commit SHA when you want the strongest supply-chain guarantee. A major tag is more convenient and moves when a new major release is published. This repository does not publish a GitHub Marketplace listing until that release is explicitly requested.
+Pin to a commit SHA when you want the strongest supply-chain guarantee. Prefer `@v0.1.0` or the floating `@v0` major tag once a release exists. Marketplace listing copy lives in [docs/marketplace.md](docs/marketplace.md); publishing still needs a browser release with 2FA.
 
 Create `.jev/ci-pathfinder.yml` from [examples/ci-pathfinder.yml](examples/ci-pathfinder.yml). Protect that file with code owners. A pull request can change which jobs exist; it must not be able to redirect Jev credentials.
 
