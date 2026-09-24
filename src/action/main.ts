@@ -23,7 +23,7 @@ import { unavailableDecision } from '../jev/normalize.js';
 import { executePathfinder } from '../decision/execute.js';
 import { executeDeterministic } from '../decision/deterministic.js';
 import { buildCacheKey, fingerprintConfig, saveDecisionCache, tryRestoreDecisionCache } from '../decision/cache.js';
-import { buildMatrixOutput } from '../decision/outputs.js';
+import { buildMatrixOutput, buildJobIfSnippets, formatIfSnippetsMarkdown } from '../decision/outputs.js';
 import { join } from 'node:path';
 import type { HistoryRun } from '../schemas/pathfinder.js';
 import {
@@ -294,6 +294,8 @@ async function run(io: ActionIO): Promise<void> {
   io.setOutput('jev_provider', result.provider);
   io.setOutput('cache_hit', String(cacheHit));
   io.setOutput('matrix', buildMatrixOutput(result.runJobs));
+  const ifSnippets = buildJobIfSnippets(loaded.jobs.map(job => job.id));
+  io.setOutput('if_snippets', JSON.stringify(ifSnippets));
 
   await io.summary(
     [
@@ -306,6 +308,8 @@ async function run(io: ActionIO): Promise<void> {
       `Skip: ${result.skipJobs.join(', ') || '(none)'}`,
       '',
       result.summary,
+      '',
+      formatIfSnippetsMarkdown(ifSnippets, result.runJobs),
     ].join('\n'),
   );
 
