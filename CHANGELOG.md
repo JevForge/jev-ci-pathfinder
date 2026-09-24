@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1
+
+### Added
+
+* `cache_decisions` input (default `false`) restores/saves the typed decision via the GitHub Actions cache. Keyed by commit SHA, config fingerprint, paths, provider, and `decision_mode`. Output `cache_hit` reports whether the cache was used.
+
 ## 0.2.0
 
 ### Added

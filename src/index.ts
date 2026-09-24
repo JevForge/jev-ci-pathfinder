@@ -26,6 +26,7 @@ const names = [
   'require_path_hits',
   'trust_repo_jev_endpoint',
   'decision_mode',
+  'cache_decisions',
   'token',
   'dry_run',
 ] as const;
