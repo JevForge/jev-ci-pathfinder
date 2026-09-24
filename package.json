@@ -1,6 +1,6 @@
 {
   "name": "jev-ci-pathfinder",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "Select which allowlisted CI jobs to run after a change. Jev decides; your workflow stays in control.",
   "private": true,
   "type": "module",
