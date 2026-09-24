@@ -28,6 +28,7 @@ const names = [
   'trust_repo_jev_endpoint',
   'decision_mode',
   'cache_decisions',
+  'comment_on_github',
   'token',
   'dry_run',
 ] as const;

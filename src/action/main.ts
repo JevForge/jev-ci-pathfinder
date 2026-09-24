@@ -25,6 +25,11 @@ import { executePathfinder } from '../decision/execute.js';
 import { executeDeterministic } from '../decision/deterministic.js';
 import { buildCacheKey, fingerprintConfig, saveDecisionCache, tryRestoreDecisionCache } from '../decision/cache.js';
 import { buildMatrixOutput, buildJobIfSnippets, formatIfSnippetsMarkdown } from '../decision/outputs.js';
+import {
+  buildPathfinderComment,
+  createFetchCommentClient,
+  upsertPathfinderComment,
+} from '../github/pr-comment.js';
 import { join } from 'node:path';
 import type { HistoryRun } from '../schemas/pathfinder.js';
 import {
@@ -317,6 +322,42 @@ async function run(io: ActionIO): Promise<void> {
       formatIfSnippetsMarkdown(ifSnippets, result.runJobs),
     ].join('\n'),
   );
+
+  const commentEnabled = parseBool(input(io, 'comment_on_github'), false);
+  if (commentEnabled) {
+    const pull =
+      io.eventName === 'pull_request' || io.eventName === 'pull_request_target'
+        ? (io.payload.pull_request as { number?: number } | undefined)
+        : undefined;
+    const issueNumber = pull?.number ?? (typeof io.payload.number === 'number' ? io.payload.number : 0);
+    const token = input(io, 'token');
+    try {
+      const client =
+        token && io.repo.owner && io.repo.repo && issueNumber > 0
+          ? createFetchCommentClient({
+              fetchImpl: io.fetch,
+              token,
+              owner: io.repo.owner,
+              repo: io.repo.repo,
+              issueNumber,
+            })
+          : null;
+      const body = buildPathfinderComment({
+        decision: result.decision,
+        runJobs: result.runJobs,
+        skipJobs: result.skipJobs,
+        provisional: result.provisional,
+        confidence: result.confidence,
+        reasonCodes: result.reasonCodes,
+        summary: result.summary,
+      });
+      const status = await upsertPathfinderComment(true, client, body);
+      io.info(`[JEV CI Pathfinder] PR comment: ${status}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'comment failed';
+      io.warning(redactSecrets(message));
+    }
+  }
 
   if (result.provisional) io.warning(`[JEV CI Pathfinder] ${result.summary}`);
   if (result.shouldFail) {

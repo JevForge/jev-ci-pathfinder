@@ -111516,6 +111516,107 @@ function formatIfSnippetsMarkdown(snippets, runJobs) {
   return lines.join("\n");
 }
 
+// src/github/pr-comment.ts
+var COMMENT_MARKER = "<!-- jev-ci-pathfinder -->";
+function buildPathfinderComment(input2) {
+  const runRows = input2.runJobs.length > 0 ? input2.runJobs.map((id) => `| \`${id}\` | run |`).join("\n") : "| _(none)_ | run |";
+  const skipRows = input2.skipJobs.length > 0 ? input2.skipJobs.map((id) => `| \`${id}\` | skip |`).join("\n") : "| _(none)_ | skip |";
+  return [
+    COMMENT_MARKER,
+    "### JEV CI Pathfinder",
+    "",
+    `- **Decision:** \`${input2.decision}\``,
+    `- **Provisional:** ${input2.provisional ? "yes" : "no"}`,
+    `- **Confidence:** ${input2.confidence.toFixed(3)}`,
+    `- **Reason codes:** ${input2.reasonCodes.map((c) => `\`${c}\``).join(", ") || "`(none)`"}`,
+    "",
+    "| Job | Action |",
+    "| --- | --- |",
+    runRows,
+    skipRows,
+    "",
+    input2.summary
+  ].join("\n");
+}
+async function upsertPathfinderComment(enabled, client, body) {
+  if (!enabled || !client) return "skipped";
+  const comments = await client.listComments();
+  const existing = comments.find((comment) => comment.body.includes(COMMENT_MARKER));
+  if (existing) {
+    await client.updateComment(existing.id, body);
+    return "updated";
+  }
+  await client.createComment(body);
+  return "posted";
+}
+async function githubJson2(fetchImpl, token, url, init) {
+  const response = await fetchImpl(url, {
+    ...init,
+    headers: {
+      accept: "application/vnd.github+json",
+      authorization: `Bearer ${token}`,
+      "user-agent": "jev-ci-pathfinder",
+      "content-type": "application/json",
+      ...init?.headers ?? {}
+    }
+  });
+  const text2 = await response.text();
+  let body = null;
+  if (text2) {
+    try {
+      body = JSON.parse(text2);
+    } catch {
+      body = text2;
+    }
+  }
+  return { ok: response.ok, status: response.status, body };
+}
+function createFetchCommentClient(input2) {
+  const owner = assertGithubName(input2.owner, "owner");
+  const repo = assertGithubName(input2.repo, "repo");
+  if (!Number.isInteger(input2.issueNumber) || input2.issueNumber <= 0) {
+    throw new Error("Invalid pull request number");
+  }
+  const base = `https://api.github.com/repos/${owner}/${repo}/issues/${input2.issueNumber}/comments`;
+  return {
+    async listComments() {
+      const out = [];
+      for (let page = 1; page <= 5; page += 1) {
+        const result = await githubJson2(
+          input2.fetchImpl,
+          input2.token,
+          `${base}?per_page=100&page=${page}`
+        );
+        if (!result.ok) throw new Error(`list comments failed with HTTP ${result.status}`);
+        const batch = Array.isArray(result.body) ? result.body : [];
+        if (batch.length === 0) break;
+        for (const item of batch) {
+          if (item && typeof item === "object" && typeof item.id === "number" && typeof item.body === "string") {
+            out.push({ id: item.id, body: item.body });
+          }
+        }
+        if (batch.length < 100) break;
+      }
+      return out;
+    },
+    async createComment(body) {
+      const result = await githubJson2(input2.fetchImpl, input2.token, base, {
+        method: "POST",
+        body: JSON.stringify({ body })
+      });
+      if (!result.ok) throw new Error(`create comment failed with HTTP ${result.status}`);
+    },
+    async updateComment(id, body) {
+      const url = `https://api.github.com/repos/${owner}/${repo}/issues/comments/${id}`;
+      const result = await githubJson2(input2.fetchImpl, input2.token, url, {
+        method: "PATCH",
+        body: JSON.stringify({ body })
+      });
+      if (!result.ok) throw new Error(`update comment failed with HTTP ${result.status}`);
+    }
+  };
+}
+
 // src/action/main.ts
 var import_node_path5 = require("node:path");
 
@@ -111835,6 +111936,35 @@ async function run(io) {
       formatIfSnippetsMarkdown(ifSnippets, result.runJobs)
     ].join("\n")
   );
+  const commentEnabled = parseBool(input(io, "comment_on_github"), false);
+  if (commentEnabled) {
+    const pull = io.eventName === "pull_request" || io.eventName === "pull_request_target" ? io.payload.pull_request : void 0;
+    const issueNumber = pull?.number ?? (typeof io.payload.number === "number" ? io.payload.number : 0);
+    const token = input(io, "token");
+    try {
+      const client = token && io.repo.owner && io.repo.repo && issueNumber > 0 ? createFetchCommentClient({
+        fetchImpl: io.fetch,
+        token,
+        owner: io.repo.owner,
+        repo: io.repo.repo,
+        issueNumber
+      }) : null;
+      const body = buildPathfinderComment({
+        decision: result.decision,
+        runJobs: result.runJobs,
+        skipJobs: result.skipJobs,
+        provisional: result.provisional,
+        confidence: result.confidence,
+        reasonCodes: result.reasonCodes,
+        summary: result.summary
+      });
+      const status = await upsertPathfinderComment(true, client, body);
+      io.info(`[JEV CI Pathfinder] PR comment: ${status}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "comment failed";
+      io.warning(redactSecrets(message));
+    }
+  }
   if (result.provisional) io.warning(`[JEV CI Pathfinder] ${result.summary}`);
   if (result.shouldFail) {
     io.setFailed(`[JEV CI Pathfinder] ${result.failureMessage}`);
@@ -111868,6 +111998,7 @@ var names = [
   "trust_repo_jev_endpoint",
   "decision_mode",
   "cache_decisions",
+  "comment_on_github",
   "token",
   "dry_run"
 ];

@@ -132,8 +132,9 @@ on:
 permissions:
   contents: read
   pull-requests: read
-  # actions: read   # only if include_history: true
-
+  # pull-requests: write  # only if comment_on_github: true
+  # actions: read         # only if include_history: true
+  # checks: write         # reserved for create_check_run
 jobs:
   pathfinder:
     runs-on: ubuntu-latest
@@ -215,6 +216,7 @@ Prefer `fromJSON(run_jobs)` over CSV. `contains` on a comma-separated string can
 | `ci_tools` | no | `github-actions` | `github-actions`, `circleci`, `jenkins` |
 | `decision_mode` | no | `jev` | `jev` asks Jev; `deterministic` uses path/always/history/monorepo rules only |
 | `cache_decisions` | no | `false` | Restore/save the typed decision via the Actions cache |
+| `comment_on_github` | no | `false` | Upsert an idempotent PR comment (`<!-- jev-ci-pathfinder -->`); needs `pull-requests: write` |
 | `require_path_hits` | no | `true` | Path-matched jobs cannot be skipped by Jev |
 | `trust_repo_jev_endpoint` | no | `false` | Allow repo-configured endpoint to receive credentials |
 | `token` | no | `${{ github.token }}` | Read PR files and optional Actions history |
@@ -293,7 +295,7 @@ permissions:
   pull-requests: read
 ```
 
-Add `actions: read` only when `include_history: true` and you want GitHub Actions run metadata. No write permission is required.
+Add `actions: read` only when `include_history: true` and you want GitHub Actions run metadata. Use `pull-requests: write` when `comment_on_github: true`.
 
 ## Advanced usage
 
