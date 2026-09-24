@@ -111899,7 +111899,7 @@ async function run(io) {
   const authoritative = parseBool(input(io, "monorepo_authoritative"), false);
   const decisionMode = parseDecisionMode(input(io, "decision_mode"));
   if (!parseBool(input(io, "dry_run"), true)) {
-    io.info("[JEV CI Pathfinder] Never edits workflows. dry_run=false does not enable writes.");
+    io.info("[JEV CI Pathfinder] dry_run=false \u2014 policy fail may fail this step. Workflows are never edited.");
   }
   const changed = await collectChangedPaths(io, timeoutMs);
   const lookback = parseLookback(input(io, "history_lookback"), loaded.lookback);
@@ -112071,8 +112071,15 @@ async function run(io) {
     }
   }
   if (result.provisional) io.warning(`[JEV CI Pathfinder] ${result.summary}`);
+  const dryRun = parseBool(input(io, "dry_run"), true);
   if (result.shouldFail) {
-    io.setFailed(`[JEV CI Pathfinder] ${result.failureMessage}`);
+    if (dryRun) {
+      io.warning(
+        `[JEV CI Pathfinder] dry_run=true \u2014 not failing the step: ${result.failureMessage}`
+      );
+    } else {
+      io.setFailed(`[JEV CI Pathfinder] ${result.failureMessage}`);
+    }
   }
 }
 

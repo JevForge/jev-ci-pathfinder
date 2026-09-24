@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.4
+
+### Changed
+
+* **Semantic `dry_run`:** default `true` still emits all outputs and the Job Summary, but no longer calls `setFailed` when policy is `fail`. Set `dry_run: false` to fail the step on policy fail (previous behavior for fail paths). Workflows are still never edited.
+
 ## 0.3.3
 
 ### Added

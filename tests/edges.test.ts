@@ -318,7 +318,7 @@ describe('runtime edges', () => {
     const failed: string[] = [];
     const warnings: string[] = [];
     const base: ActionIO = {
-      inputs: { changed_paths: 'src/a.ts', discover_workflows: 'false' },
+      inputs: { changed_paths: 'src/a.ts', discover_workflows: 'false', dry_run: 'false' },
       env: {},
       workspace: root,
       eventName: 'workflow_dispatch',

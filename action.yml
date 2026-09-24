@@ -119,7 +119,7 @@ inputs:
     required: false
     default: ${{ github.token }}
   dry_run:
-    description: Accepted for compatibility. The action never edits workflows, regardless of this value.
+    description: When true (default), emit outputs and summaries but do not fail the step on policy fail. When false, policy fail fails the step. The action never edits workflows.
     required: false
     default: 'true'
 

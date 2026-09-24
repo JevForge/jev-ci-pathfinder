@@ -24,7 +24,7 @@ Running every job on every push wastes minutes and money. Letting an unconstrain
 * Deterministic allowlist, path hits, always-on jobs, and dependency closure
 * Optional history reruns and monorepo / CI inventory evidence
 * Safe failure policies: `fail` | `warn` | `request-review` | `no-op`
-* Never rewrites workflows; `dry_run` is accepted for compatibility only
+* Never rewrites workflows; `dry_run` (default `true`) suppresses step failure on policy `fail` — set `false` to fail the step
 
 ## How it works
 
@@ -221,7 +221,7 @@ Prefer `fromJSON(run_jobs)` over CSV. `contains` on a comma-separated string can
 | `require_path_hits` | no | `true` | Path-matched jobs cannot be skipped by Jev |
 | `trust_repo_jev_endpoint` | no | `false` | Allow repo-configured endpoint to receive credentials |
 | `token` | no | `${{ github.token }}` | Read PR files and optional Actions history |
-| `dry_run` | no | `true` | Compatibility only; the Action never edits workflows |
+| `dry_run` | no | `true` | Emit outputs without failing the step on policy `fail`; set `false` to fail. Never edits workflows |
 
 ## Outputs
 
