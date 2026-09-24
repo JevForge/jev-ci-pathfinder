@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.4
+
+### Added
+
+* `examples/CODEOWNERS` and `examples/branch-protection.md` to protect `.jev/ci-pathfinder.yml` from silent allowlist edits.
+
 ## 0.2.3
 
 ### Added
