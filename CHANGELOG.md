@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.4
+
+### Added
+
+* Vitest contract test that reads `action.yml` and `examples/**/*.yml` and fails when an example references an undeclared input or output.
+
 ## 0.4.3
 
 ### Added
