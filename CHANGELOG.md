@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1
+
+Shorten the Marketplace `action.yml` description to 89 characters (GitHub limit 125).
+
 ## 0.1.0
 
 Initial JEV CI Pathfinder action.

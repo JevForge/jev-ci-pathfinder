@@ -61,7 +61,7 @@ jobs:
       - run: npm test
 ```
 
-Pin to a commit SHA when you want the strongest supply-chain guarantee. Prefer `@v0.1.0` or the floating `@v0` major tag once a release exists. Marketplace listing copy lives in [docs/marketplace.md](docs/marketplace.md); publishing still needs a browser release with 2FA.
+Pin to a commit SHA when you want the strongest supply-chain guarantee. Prefer `@v0.1.1` or the floating `@v0` major tag. Marketplace listing copy lives in [docs/marketplace.md](docs/marketplace.md); the Marketplace checkbox still needs a one-time browser 2FA confirmation.
 
 Create `.jev/ci-pathfinder.yml` from [examples/ci-pathfinder.yml](examples/ci-pathfinder.yml). Protect that file with code owners. A pull request can change which jobs exist; it must not be able to redirect Jev credentials.
 
