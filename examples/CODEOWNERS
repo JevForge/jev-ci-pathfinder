@@ -1,0 +1,5 @@
+# Protect Pathfinder config so PRs cannot silently empty the allowlist.
+# Replace @your-org/ci-admins with your team or usernames.
+.jev/ci-pathfinder.yml @your-org/ci-admins
+.jev/config.yml @your-org/ci-admins
+.github/workflows/ @your-org/ci-admins
