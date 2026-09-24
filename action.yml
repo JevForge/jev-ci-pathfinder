@@ -142,6 +142,8 @@ outputs:
     description: Provider that was asked. The action never falls back to a different provider.
   cache_hit:
     description: 'true when the decision was restored from the Actions cache.'
+  matrix:
+    description: JSON object for strategy.matrix — {"include":[{"job":"unit"},...]}.
 
 runs:
   using: node24

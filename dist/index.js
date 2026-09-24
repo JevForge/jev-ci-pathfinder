@@ -111436,6 +111436,11 @@ async function saveDecisionCache(input2) {
   }
 }
 
+// src/decision/outputs.ts
+function buildMatrixOutput(runJobs) {
+  return JSON.stringify({ include: runJobs.map((job) => ({ job })) });
+}
+
 // src/action/main.ts
 var import_node_path5 = require("node:path");
 
@@ -111733,6 +111738,7 @@ async function run(io) {
   io.setOutput("monorepo_projects", JSON.stringify(monorepo.affectedProjects));
   io.setOutput("jev_provider", result.provider);
   io.setOutput("cache_hit", String(cacheHit));
+  io.setOutput("matrix", buildMatrixOutput(result.runJobs));
   await io.summary(
     [
       "## JEV CI Pathfinder",
