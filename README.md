@@ -28,6 +28,8 @@ Running every job on every push wastes minutes and money. Letting an unconstrain
 
 ## How it works
 
+![Pathfinder flow: changed paths and allowlist → evidence → Jev or deterministic decide → policy outputs → your CI if gates](docs/assets/pathfinder-flow.svg)
+
 ```text
 GitHub event / changed paths
         ↓
