@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## 0.1.2
 
 ### Changed
 
@@ -9,6 +9,7 @@
 * Prefixed runtime errors and warnings with `[JEV CI Pathfinder]`.
 * Expanded CONTRIBUTING and SECURITY guidance.
 * Added `examples/basic.yml` and `examples/pr.yml`.
+* Aligned Release workflow with `jev-model-navigator` (publish release inside `workflow_dispatch`).
 
 ## 0.1.1
 
