@@ -30,6 +30,11 @@ import {
   createFetchCommentClient,
   upsertPathfinderComment,
 } from '../github/pr-comment.js';
+import {
+  createFetchCheckRunClient,
+  maybeCreateCheckRun,
+  resolveHeadSha,
+} from '../github/check-run.js';
 import { join } from 'node:path';
 import type { HistoryRun } from '../schemas/pathfinder.js';
 import {
@@ -355,6 +360,38 @@ async function run(io: ActionIO): Promise<void> {
       io.info(`[JEV CI Pathfinder] PR comment: ${status}`);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'comment failed';
+      io.warning(redactSecrets(message));
+    }
+  }
+
+  const checkEnabled = parseBool(input(io, 'create_check_run'), false);
+  if (checkEnabled) {
+    const token = input(io, 'token');
+    try {
+      const headSha = resolveHeadSha(io.payload, io.env.GITHUB_SHA);
+      const client =
+        token && io.repo.owner && io.repo.repo
+          ? createFetchCheckRunClient({
+              fetchImpl: io.fetch,
+              token,
+              owner: io.repo.owner,
+              repo: io.repo.repo,
+            })
+          : null;
+      const status = await maybeCreateCheckRun(true, headSha, client, {
+        decision: result.decision,
+        runJobs: result.runJobs,
+        skipJobs: result.skipJobs,
+        provisional: result.provisional,
+        confidence: result.confidence,
+        reasonCodes: result.reasonCodes,
+        summary: result.summary,
+        shouldFail: result.shouldFail,
+        needsReview: result.needsReview,
+      });
+      io.info(`[JEV CI Pathfinder] Check run: ${status}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'check run failed';
       io.warning(redactSecrets(message));
     }
   }

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.3
+
+### Added
+
+* `create_check_run` input (default `false`) creates a completed Check Run named “JEV CI Pathfinder” with conclusion aligned to policy/`decision`. Requires `checks: write`.
+
 ## 0.3.2
 
 ### Added

@@ -106,6 +106,10 @@ inputs:
     description: When true on pull_request events, upsert an idempotent PR comment marked <!-- jev-ci-pathfinder --> with the run/skip table. Requires pull-requests: write.
     required: false
     default: 'false'
+  create_check_run:
+    description: When true, create a completed Check Run named JEV CI Pathfinder whose conclusion follows policy/decision. Requires checks: write.
+    required: false
+    default: 'false'
   trust_repo_jev_endpoint:
     description: Allow jev_endpoint from repository config to receive credentials. Leave false unless that file is protected.
     required: false
