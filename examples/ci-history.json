@@ -1,0 +1,9 @@
+{
+  "runs": [
+    {
+      "head_branch": "main",
+      "conclusion": "failure",
+      "failed_jobs": ["integration"]
+    }
+  ]
+}

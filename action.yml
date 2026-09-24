@@ -1,0 +1,141 @@
+name: JEV CI Pathfinder
+description: >-
+  Choose which allowlisted CI jobs to run or skip after a change.
+  Jev makes the typed decision; a deterministic executor enforces the allowlist
+  and never edits workflows.
+author: JevForge
+branding:
+  icon: git-branch
+  color: purple
+
+inputs:
+  config_path:
+    description: Path to the pathfinder config with the job allowlist, path globs, and dependencies.
+    required: false
+    default: .jev/ci-pathfinder.yml
+  changed_paths:
+    description: Newline-separated list or JSON array of changed repo-relative paths. Empty collects paths from the GitHub event.
+    required: false
+    default: ''
+  job_map:
+    description: Optional JSON array that replaces the jobs in the config file.
+    required: false
+    default: ''
+  jev_provider:
+    description: 'Jev provider: vercel-ai-gateway, typesafe-native, or custom-compatible. Defaults to vercel-ai-gateway.'
+    required: false
+    default: ''
+  jev_model:
+    description: Model id. vercel-ai-gateway defaults to typesafe-ai/jev. Native and custom providers require a catalog model id.
+    required: false
+    default: ''
+  jev_endpoint:
+    description: HTTPS endpoint for typesafe-native or custom-compatible. Workflow inputs are trusted; repository config is not, unless trust_repo_jev_endpoint is true.
+    required: false
+    default: ''
+  jev_timeout_ms:
+    description: Provider timeout in milliseconds, from 1000 to 120000.
+    required: false
+    default: '45000'
+  jev_config_path:
+    description: Shared Jev config path.
+    required: false
+    default: .jev/config.yml
+  min_confidence:
+    description: Minimum confidence required before a SELECT_JOBS result can skip jobs.
+    required: false
+    default: ''
+  low_confidence_policy:
+    description: 'Policy when Jev is unavailable, rejected, or below min_confidence: fail, warn, request-review, or no-op.'
+    required: false
+    default: ''
+  include_history:
+    description: Read .jev/ci-history.json and, when a token is available, recent GitHub Actions failures.
+    required: false
+    default: 'false'
+  history_path:
+    description: JSON file of recent runs used as history evidence.
+    required: false
+    default: .jev/ci-history.json
+  history_lookback:
+    description: Maximum history runs to consider, from 1 to 20.
+    required: false
+    default: ''
+  history_branch:
+    description: Only count history runs for this branch. Empty counts every run in the file or API page.
+    required: false
+    default: ''
+  monorepo_plan:
+    description: JSON object from JEV Monorepo Navigator with affected_projects and execution_plan.
+    required: false
+    default: ''
+  monorepo_authoritative:
+    description: Union allowlisted jobs mapped from affected monorepo projects into the run set.
+    required: false
+    default: 'false'
+  discover_monorepo:
+    description: Discover pnpm, npm, or nx projects in the workspace and treat matching paths as evidence.
+    required: false
+    default: 'true'
+  discover_workflows:
+    description: Read GitHub Actions, CircleCI, and Jenkins config as inventory evidence. Scripts are never sent to Jev.
+    required: false
+    default: 'true'
+  workflows_dir:
+    description: Directory of GitHub Actions workflow files.
+    required: false
+    default: .github/workflows
+  ci_tools:
+    description: Comma-separated inventory readers. Allowed values are github-actions, circleci, and jenkins.
+    required: false
+    default: github-actions
+  require_path_hits:
+    description: Keep jobs whose configured paths match the diff even if Jev would skip them.
+    required: false
+    default: 'true'
+  trust_repo_jev_endpoint:
+    description: Allow jev_endpoint from repository config to receive credentials. Leave false unless that file is protected.
+    required: false
+    default: 'false'
+  token:
+    description: Token used only to read pull request files and, when history is enabled, Actions run metadata.
+    required: false
+    default: ${{ github.token }}
+  dry_run:
+    description: Accepted for compatibility. The action never edits workflows, regardless of this value.
+    required: false
+    default: 'true'
+
+outputs:
+  decision:
+    description: 'SELECT_JOBS, ABSTAIN, or REQUEST_REVIEW.'
+  run_jobs:
+    description: JSON array of allowlisted job ids to run, in config order.
+  skip_jobs:
+    description: JSON array of allowlisted job ids to skip, in config order.
+  run_jobs_csv:
+    description: Comma-separated run_jobs. Prefer the JSON output with fromJSON.
+  skip_jobs_csv:
+    description: Comma-separated skip_jobs. Prefer the JSON output with fromJSON.
+  confidence:
+    description: Jev confidence from 0 to 1. Policy overrides do not invent a higher value.
+  reason_codes:
+    description: JSON array of stable reason codes.
+  summary:
+    description: Plain-text explanation. It is not a command and must not be executed.
+  provisional:
+    description: 'true when the run set came from deterministic policy rather than a trusted Jev selection.'
+  needs_review:
+    description: 'true when the request-review policy applied.'
+  affected_paths:
+    description: JSON array of normalized changed paths collected by the action.
+  history_applied:
+    description: JSON array of allowlisted jobs added because they failed in recent history.
+  monorepo_projects:
+    description: JSON array of affected project names from discovery or the monorepo navigator plan.
+  jev_provider:
+    description: Provider that was asked. The action never falls back to a different provider.
+
+runs:
+  using: node24
+  main: dist/index.js

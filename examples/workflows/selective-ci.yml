@@ -1,0 +1,35 @@
+name: Selective CI
+on:
+  pull_request:
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  pathfinder:
+    runs-on: ubuntu-latest
+    outputs:
+      run_jobs: ${{ steps.plan.outputs.run_jobs }}
+      decision: ${{ steps.plan.outputs.decision }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: plan
+        uses: JevForge/jev-ci-pathfinder@v0.1.0
+        env:
+          AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY }}
+
+  unit:
+    needs: pathfinder
+    if: contains(fromJSON(needs.pathfinder.outputs.run_jobs), 'unit')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm test
+
+  integration:
+    needs: pathfinder
+    if: contains(fromJSON(needs.pathfinder.outputs.run_jobs), 'integration')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm run test:integration

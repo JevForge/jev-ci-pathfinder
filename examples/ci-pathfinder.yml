@@ -1,0 +1,28 @@
+version: 1
+jobs:
+  - id: lint
+    always: true
+  - id: unit
+    paths:
+      - src/**
+      - tests/**
+    needs: []
+  - id: integration
+    paths:
+      - src/api/**
+    needs:
+      - unit
+    rerun_on_recent_failure: true
+  - id: docs
+    paths:
+      - docs/**
+      - '*.md'
+history:
+  lookback: 10
+monorepo:
+  packages:
+    - name: web
+      paths:
+        - apps/web/**
+      jobs:
+        - unit

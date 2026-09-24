@@ -1,0 +1,6 @@
+{
+  "affected_projects": ["web"],
+  "execution_plan": [
+    { "project": "web", "jobs": ["unit"] }
+  ]
+}
