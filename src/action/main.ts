@@ -22,6 +22,8 @@ import { createJevProvider, credentialEnvName } from '../jev/factory.js';
 import { unavailableDecision } from '../jev/normalize.js';
 import { executePathfinder } from '../decision/execute.js';
 import { executeDeterministic } from '../decision/deterministic.js';
+import { buildCacheKey, fingerprintConfig, saveDecisionCache, tryRestoreDecisionCache } from '../decision/cache.js';
+import { join } from 'node:path';
 import type { HistoryRun } from '../schemas/pathfinder.js';
 import {
   parseBool,
@@ -205,45 +207,73 @@ async function run(io: ActionIO): Promise<void> {
       )
     : { discovered: false, jobIds: [], sources: [], jobs: [] };
 
-  const result =
-    decisionMode === 'deterministic'
-      ? executeDeterministic({
-          provider: settings.provider,
-          jobs: loaded.jobs,
-          changedPaths: changed.paths,
-          requirePathHits,
-          history,
-          monorepo,
-          inventory,
-          noChangedPaths: changed.paths.length === 0,
-        })
-      : await executePathfinder({
-          provider: settings.refusal
-            ? {
-                id: settings.provider,
-                async evaluateCiSelection() {
-                  return unavailableDecision(settings.provider, settings.refusal!);
-                },
-              }
-            : createJevProvider(settings.provider, {
-                apiKey: io.env[credentialEnvName(settings.provider)],
-                endpoint: settings.endpoint,
-                model: settings.model,
-                timeoutMs,
-                fetchImpl: io.fetch,
-              }),
-          jobs: loaded.jobs,
-          changedPaths: changed.paths,
-          pathsTruncated: changed.truncated,
-          minConfidence,
-          policy,
-          requirePathHits,
-          history,
-          monorepo,
-          inventory,
-        });
+  const cacheEnabled = parseBool(input(io, 'cache_decisions'), false);
+  const cacheKey = buildCacheKey({
+    sha: io.env.GITHUB_SHA || 'nosha',
+    configFingerprint: fingerprintConfig({
+      jobs: loaded.jobs,
+      packages: loaded.packages,
+      lookback: loaded.lookback,
+      minConfidence,
+      policy,
+      requirePathHits,
+      authoritative,
+    }),
+    paths: changed.paths,
+    provider: settings.provider,
+    decisionMode,
+  });
+  const cacheDir = join(workspace, '.jev', '.decision-cache');
+  let cacheHit = false;
+  let result = await tryRestoreDecisionCache({ enabled: cacheEnabled, key: cacheKey, cacheDir });
+  if (result) {
+    cacheHit = true;
+    io.info(`[JEV CI Pathfinder] Restored decision cache (${cacheKey}).`);
+  } else {
+    result =
+      decisionMode === 'deterministic'
+        ? executeDeterministic({
+            provider: settings.provider,
+            jobs: loaded.jobs,
+            changedPaths: changed.paths,
+            requirePathHits,
+            history,
+            monorepo,
+            inventory,
+            noChangedPaths: changed.paths.length === 0,
+          })
+        : await executePathfinder({
+            provider: settings.refusal
+              ? {
+                  id: settings.provider,
+                  async evaluateCiSelection() {
+                    return unavailableDecision(settings.provider, settings.refusal!);
+                  },
+                }
+              : createJevProvider(settings.provider, {
+                  apiKey: io.env[credentialEnvName(settings.provider)],
+                  endpoint: settings.endpoint,
+                  model: settings.model,
+                  timeoutMs,
+                  fetchImpl: io.fetch,
+                }),
+            jobs: loaded.jobs,
+            changedPaths: changed.paths,
+            pathsTruncated: changed.truncated,
+            minConfidence,
+            policy,
+            requirePathHits,
+            history,
+            monorepo,
+            inventory,
+          });
+    if (cacheEnabled) {
+      const saved = await saveDecisionCache({ enabled: true, key: cacheKey, cacheDir, result });
+      if (saved) io.info(`[JEV CI Pathfinder] Saved decision cache (${cacheKey}).`);
+    }
+  }
 
-  if (decisionMode === 'deterministic') {
+  if (decisionMode === 'deterministic' && !cacheHit) {
     io.info('[JEV CI Pathfinder] decision_mode=deterministic — Jev was not called.');
   }
 
@@ -261,6 +291,7 @@ async function run(io: ActionIO): Promise<void> {
   io.setOutput('history_applied', JSON.stringify(result.historyApplied));
   io.setOutput('monorepo_projects', JSON.stringify(monorepo.affectedProjects));
   io.setOutput('jev_provider', result.provider);
+  io.setOutput('cache_hit', String(cacheHit));
 
   await io.summary(
     [

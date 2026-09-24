@@ -7,3 +7,4 @@ lib/
 !.env.example
 .DS_Store
 *.tsbuildinfo
+.jev/.decision-cache/

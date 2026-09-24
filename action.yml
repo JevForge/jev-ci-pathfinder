@@ -94,6 +94,10 @@ inputs:
     description: 'jev (default) asks Jev; deterministic selects from path hits, always-on, history, and authoritative monorepo jobs without calling Jev.'
     required: false
     default: jev
+  cache_decisions:
+    description: When true, restore/save the typed decision via the Actions cache keyed by commit SHA, config, paths, provider, and decision_mode.
+    required: false
+    default: 'false'
   trust_repo_jev_endpoint:
     description: Allow jev_endpoint from repository config to receive credentials. Leave false unless that file is protected.
     required: false
@@ -136,6 +140,8 @@ outputs:
     description: JSON array of affected project names from discovery or the monorepo navigator plan.
   jev_provider:
     description: Provider that was asked. The action never falls back to a different provider.
+  cache_hit:
+    description: 'true when the decision was restored from the Actions cache.'
 
 runs:
   using: node24

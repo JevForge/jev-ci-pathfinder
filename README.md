@@ -213,6 +213,7 @@ Prefer `fromJSON(run_jobs)` over CSV. `contains` on a comma-separated string can
 | `workflows_dir` | no | `.github/workflows` | GitHub Actions workflow directory |
 | `ci_tools` | no | `github-actions` | `github-actions`, `circleci`, `jenkins` |
 | `decision_mode` | no | `jev` | `jev` asks Jev; `deterministic` uses path/always/history/monorepo rules only |
+| `cache_decisions` | no | `false` | Restore/save the typed decision via the Actions cache |
 | `require_path_hits` | no | `true` | Path-matched jobs cannot be skipped by Jev |
 | `trust_repo_jev_endpoint` | no | `false` | Allow repo-configured endpoint to receive credentials |
 | `token` | no | `${{ github.token }}` | Read PR files and optional Actions history |
@@ -236,6 +237,7 @@ Prefer `fromJSON(run_jobs)` over CSV. `contains` on a comma-separated string can
 | `history_applied` | JSON array of jobs forced by recent failures |
 | `monorepo_projects` | JSON array of affected project names |
 | `jev_provider` | Provider that was called (never silently swapped) |
+| `cache_hit` | `true` when the decision was restored from the Actions cache |
 
 `run_jobs` and `skip_jobs` always partition the configured allowlist.
 
